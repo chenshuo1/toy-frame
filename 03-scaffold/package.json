@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "build": "esbuild index.jsx --bundle --outfile=dist/index.js --target=chrome100"
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.29",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.2.2",
+    "valtio": "^1.4.0"
+  }
+}
