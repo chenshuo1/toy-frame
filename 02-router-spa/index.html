@@ -1,0 +1,136 @@
+<div id="root"></div>
+<script type="text/jsx" data-type="module">
+  import React from 'react';
+  import ReactDOM from 'react-dom';
+  import { useSnapshot } from 'valtio';
+  import { proxyWithComputed } from 'valtio/utils';
+  import { HashRouter, Route, Routes, Outlet, Link } from 'react-router-dom';
+
+  const state = proxyWithComputed(
+    { todos: [] },
+    {
+      left: ({ todos }) => todos.filter((todo) => !todo.completed).length,
+    }
+  );
+
+  // for debugging
+  window.g_state = state;
+
+  function TodoItem(props) {
+    const { todo, onChange } = props;
+    return (
+      <div>
+        <input type="checkbox" checked={todo.completed} onChange={onChange} />
+        <span>{todo.text}</span>
+      </div>
+    );
+  }
+
+  function TodoFooter() {
+    const { left } = useSnapshot(state);
+    return (
+      <div>
+        <span>{left} items left</span>
+      </div>
+    );
+  }
+
+  function TodoAdd(props) {
+    return <input onKeyDown={props.onAddTodo} />;
+  }
+
+  function App() {
+    const { todos } = useSnapshot(state);
+    function handleNewTodoKeyDown(e) {
+      if (e.keyCode !== 13) return;
+      e.preventDefault();
+      const text = e.target.value;
+      state.todos.push({
+        id: Date.now(),
+        text,
+        completed: false,
+      });
+      e.target.value = '';
+    }
+    function handleTodoCompleted(id) {
+      state.todos.forEach((todo) => {
+        if (todo.id === id) todo.completed = !todo.completed;
+      });
+    }
+    return (
+      <div>
+        <h2>Todos</h2>
+        <div>
+          <TodoAdd onAddTodo={handleNewTodoKeyDown} />
+        </div>
+        <div>
+          {todos.length
+            ? todos.map((todo) => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                onChange={handleTodoCompleted.bind(null, todo.id)}
+              />
+            ))
+            : null}
+        </div>
+        <div>{todos.length ? <TodoFooter /> : null}</div>
+      </div>
+    );
+  }
+
+  function About() {
+    return <h2>About</h2>;
+  }
+
+  function Layout() {
+    return (
+      <div>
+        <div>
+          <Link to="/">Home</Link> /
+          <Link to="/about">About</Link>
+        </div>
+        <Outlet />
+      </div>
+    )
+  }
+
+  ReactDOM.render((
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route path="" element={<App />} />
+          <Route path="about" element={<About />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  ), document.getElementById('root'));
+</script>
+
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+  globalThis.process = { env: { NODE_ENV: 'development' } };
+</script>
+<script type="importmap">
+  {
+    "imports": {
+      "react": "https://ga.jspm.io/npm:react@17.0.2/dev.index.js",
+      "react-dom": "https://ga.jspm.io/npm:react-dom@17.0.2/dev.index.js",
+      "react-router-dom": "https://ga.jspm.io/npm:react-router-dom@6.2.2/index.js",
+      "valtio": "https://ga.jspm.io/npm:valtio@1.4.0/esm/index.js",
+      "valtio/utils": "https://ga.jspm.io/npm:valtio@1.4.0/esm/utils.js"
+    },
+    "scopes": {
+      "https://ga.jspm.io/": {
+        "@babel/runtime/helpers/esm/extends": "https://ga.jspm.io/npm:@babel/runtime@7.17.8/helpers/esm/extends.js",
+        "history": "https://ga.jspm.io/npm:history@5.2.0/index.js",
+        "object-assign": "https://ga.jspm.io/npm:object-assign@4.1.1/index.js",
+        "proxy-compare": "https://ga.jspm.io/npm:proxy-compare@2.1.0/dist/index.modern.js",
+        "react-router": "https://ga.jspm.io/npm:react-router@6.2.2/index.js",
+        "scheduler": "https://ga.jspm.io/npm:scheduler@0.20.2/dev.index.js",
+        "scheduler/tracing": "https://ga.jspm.io/npm:scheduler@0.20.2/dev.tracing.js",
+        "valtio/vanilla": "https://ga.jspm.io/npm:valtio@1.4.0/esm/vanilla.js"
+      }
+    }
+  }
+</script>
